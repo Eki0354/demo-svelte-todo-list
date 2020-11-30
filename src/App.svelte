@@ -8,7 +8,7 @@
 	export let editItem = null;
 	export let editVisible = false;
 
-	$: filteredTodoList = todoList.filter(i => !todoTitle || (~i.title.indexOf(todoTitle) || ~i.desc.indexOf(todoTitle)));
+	$: filteredTodoList = todoList.filter(i => !i.deleted && (!todoTitle || (~i.title.indexOf(todoTitle) || ~i.desc.indexOf(todoTitle))));
 	$: todos = filteredTodoList.filter(i => !i.done);
 	$: dones = filteredTodoList.filter(i => i.done);
 
@@ -36,6 +36,7 @@
 				desc: '',
 				done: false,
 				created: Date.now(),
+				deleted: false,
 			});
 			saveTodoList();
 			todoTitle = '';
@@ -85,28 +86,36 @@
 		editVisible = false;
 		editItem = null;
 	}
+
+	// 回收条目
+	function delItem(id) {
+		todoList.some(i => i.id === id && (i.deleted = true));
+		todoList = todoList.slice();
+		saveTodoList();
+		closeEdit();
+	}
 </script>
 
 <main>
 	<h1>Todo List</h1>
-	<input type="text" bind:value={todoTitle} on:keydown={todoKeyPressHandle} on:input={todoInputHandle} >
+	<input class="todo-title" type="text" bind:value={todoTitle} on:keydown={todoKeyPressHandle} on:input={todoInputHandle} >
 	<!-- 未做/已做 切换 -->
 	<div class="switch">
-		<input type="radio" name="status" checked={!switchStatus} value={false} on:change={() => switchChangeHandle(false)} >undo
-		<input type="radio" name="status" checked={switchStatus} value={true} on:change={() => switchChangeHandle(true)} >done
+		<input type="radio" name="status" checked={!switchStatus} value={false} on:change={() => switchChangeHandle(false)} ><span class="label">undo</span>
+		<input type="radio" name="status" checked={switchStatus} value={true} on:change={() => switchChangeHandle(true)} ><span class="label">done</span>
 	</div>
 	{#if !switchStatus}
 		<!-- 未完成列表 -->
 		<div class="todos">
 			{#each todos as { id, title, desc, done, created }}
-				<TodoItem {id} {title} {desc} {done} {created} edit={openEditDialog} switchStatus={finish} />
+				<TodoItem {id} {title} {desc} {done} {created} edit={openEditDialog} switchStatus={finish} del={delItem}/>
 			{/each}
 		</div>
 	{:else}
 		<!-- 已完成列表 -->
 		<div class="dones">
 			{#each dones as { id, title, desc, done, created }}
-				<TodoItem {id} {title} {desc} {done} {created} switchStatus={unfinish} />
+				<TodoItem {id} {title} {desc} {done} {created} switchStatus={unfinish} del={delItem}/>
 			{/each}
 		</div>
 	{/if}
@@ -135,5 +144,31 @@
 		main {
 			max-width: none;
 		}
+	}
+
+	.todo-title {
+		width: 600px;
+	}
+
+	input[type="radio"] {
+		margin-bottom: 0;
+	}
+
+	input[type="radio"]:not(:first-child) {
+		margin-left: 16px;
+	}
+
+	.label {
+		vertical-align: text-top;
+		line-height: 20px;
+		margin-left: 4px;
+	}
+
+	.todos, .dones {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		margin-top: 20px;
 	}
 </style>

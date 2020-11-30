@@ -16,7 +16,7 @@
     <div class="body">
       <span><b>Title: </b>{title}</span><br><br>
       <label for="desc"><b>Description: </b></label>
-      <input type="text" bind:value={desc} on:input={descInputHandle}><br><br>
+      <textarea cols={50} rows={5} bind:value={desc} on:input={descInputHandle}></textarea><br><br>
     </div>
     <div class="footer">
       <button disabled={!desc} on:click={() => ok(id, desc)}>Ok</button>
