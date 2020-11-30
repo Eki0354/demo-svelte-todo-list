@@ -1,3 +1,4 @@
+import './utils/storage';
 import App from './App.svelte';
 
 const app = new App({
